@@ -42,4 +42,4 @@ for _ in range(1500):
 df = pd.DataFrame(veri, columns=["saat", "gun", "hava", "etiket"])
 df.to_csv("trafik_verisi.csv", index=False)
 
-print("Sürpriz faktörlü (gerçekçi) 1500 satırlık trafik_verisi.csv başarıyla güncellendi.")
+print("1500 satırlık trafik_verisi.csv başarıyla güncellendi.")
