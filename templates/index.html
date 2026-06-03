@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trafik Yoğunluk Tahmini</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; color: #212529; font-family: sans-serif; }
+        .main-container { max-width: 600px; margin: 50px auto; }
+        .main-card { border: 1px solid #dee2e6; border-radius: 6px; background-color: #fff; padding: 30px; }
+        .result-box { background-color: #f1f3f5; border: 1px solid #ced4da; border-radius: 4px; padding: 15px; text-align: center; margin-top: 25px; }
+        .history-table { background-color: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 20px; margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <div class="container main-container">
+        <div class="main-card shadow-sm">
+            <h5 class="mb-4 text-center fw-bold">Trafik Yoğunluk Tahmin Sistemi</h5>
+            
+            <form action="/tahmin" method="POST">
+                <div class="mb-3">
+                    <label for="saat" class="form-label small fw-semibold">Saat (0-23)</label>
+                    <input type="number" class="form-control" id="saat" name="saat" min="0" max="23" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="gun" class="form-label small fw-semibold">Gün</label>
+                    <select class="form-select" id="gun" name="gun" required>
+                        <option value="1">Pazartesi</option>
+                        <option value="2">Salı</option>
+                        <option value="3">Çarşamba</option>
+                        <option value="4">Perşembe</option>
+                        <option value="5">Cuma</option>
+                        <option value="6">Cumartesi</option>
+                        <option value="7">Pazar</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="hava" class="form-label small fw-semibold">Hava Durumu</label>
+                    <select class="form-select" id="hava" name="hava" required>
+                        <option value="0">Güneşli / Açık</option>
+                        <option value="1">Yağmurlu</option>
+                        <option value="2">Karlı</option>
+                        <option value="3">Bulutlu</option>
+                        <option value="4">Rüzgarlı</option>
+                        <option value="5">Don</option>
+                        <option value="6">Sisli</option>
+                        <option value="7">Tipi</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-dark w-100 mt-2">Tahmin Et</button>
+            </form>
+
+            {% if sonuc %}
+            <div class="result-box">
+                <span class="text-muted small d-block mb-1">Tahmin Edilen Yoğunluk</span>
+                <strong class="fs-5 text-uppercase text-dark">{{ sonuc }}</strong>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="history-table shadow-sm">
+            <h6 class="fw-bold mb-3 text-secondary">Geçmiş Tahmin Kayıtları</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Saat</th>
+                            <th>Gün</th>
+                            <th>Hava Durumu</th>
+                            <th>Yoğunluk Sonucu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for kayıt in tahminler %}
+                        <tr>
+                            <td>{{ kayıt[0] }}:00</td>
+                            <td>
+                                {% if kayıt[1] == 1 %}Pazartesi
+                                {% elif kayıt[1] == 2 %}Salı
+                                {% elif kayıt[1] == 3 %}Çarşamba
+                                {% elif kayıt[1] == 4 %}Perşembe
+                                {% elif kayıt[1] == 5 %}Cuma
+                                {% elif kayıt[1] == 6 %}Cumartesi
+                                {% elif kayıt[1] == 7 %}Pazar{% endif %}
+                            </td>
+                            <td>
+                                {% if kayıt[2] == 0 %}Güneşli
+                                {% elif kayıt[2] == 1 %}Yağmurlu
+                                {% elif kayıt[2] == 2 %}Karlı
+                                {% elif kayıt[2] == 3 %}Bulutlu
+                                {% elif kayıt[2] == 4 %}Rüzgarlı
+                                {% elif kayıt[2] == 5 %}Don
+                                {% elif kayıt[2] == 6 %}Sisli
+                                {% elif kayıt[2] == 7 %}Tipi{% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {% if kayıt[3] == 'yuksek' %}bg-danger{% elif kayıt[3] == 'orta' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                    {{ kayıt[3] | upper }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted small py-3">Henüz kaydedilmiş bir tahmin bulunmuyor.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
