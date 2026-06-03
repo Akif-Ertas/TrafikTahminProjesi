@@ -3,12 +3,13 @@ import sqlite3
 import joblib
 
 app = Flask(__name__)
-# Sayfa yönlendirmelerinde geçici hafıza (session) kullanabilmek için bir gizli anahtar tanımlıyoruz
+# gecici hafiza icin gizli anahtar tanimliyoruz
 app.secret_key = "trafik_projesi_ozel_anahtari"
 
-# Modeli Yükle
-model = joblib.load("model.pkl")
+model = joblib.load("model.pkl") #modeli yukle
+#Gerekli web (Flask) ve veritabanı (SQLite) kütüphanelerini çağırır. Flask(__name__) ile sitemizi başlatırız. Sayfa yönlendirmelerinde verilerin silinmemesi (session kullanabilmek) için bir gizli anahtar belirleriz. En önemlisi joblib.load ile az önce eğittiğimiz beyni (model.pkl) sistemin içine takarız
 
+#trafik.db olusturur ve tahminler diye bir tablo olustururuz. id,saat,gun,hava,sonuc sutunu olusturur
 def veritabani_olustur():
     conn = sqlite3.connect('trafik.db')
     c = conn.cursor()
@@ -24,12 +25,12 @@ def veritabani_olustur():
     conn.commit()
     conn.close()
 
-# Ana Sayfa (Burada veritabanındaki kayıtları çekip ekrana göndereceğiz)
+# Ana Sayfa (Burada veritabanindaki kayitlari cekip ekrana gonderecegiz)
 @app.route('/')
 def index():
     conn = sqlite3.connect('trafik.db')
     c = conn.cursor()
-    # En son yapılan tahminler en üstte görünsün diye 'ORDER BY id DESC' kullanıyoruz
+    # en son yapilan tahminler en ustte gorunsun diye order by id desc kullanıyoruz
     c.execute("SELECT saat, gun, hava, sonuc FROM tahminler ORDER BY id DESC")
     kayitlar = c.fetchall()
     conn.close()
@@ -39,7 +40,7 @@ def index():
     
     return render_template('index.html', tahminler=kayitlar, sonuc=sonuc)
 
-# Tahmin İşlemi Rotaları
+# post metoduyla /tahmin rotasina veri alir ve phyton degiskenlerine esitler(sayi olarak)
 @app.route('/tahmin', methods=['POST'])
 def tahmin_yap():
     if request.method == 'POST':
@@ -47,19 +48,19 @@ def tahmin_yap():
         gun = int(request.form.get('gun'))
         hava = int(request.form.get('hava'))
         
+        #kullanicidan alinan 3 veriyi yapay zekaya verip tahmin et deriz. sonucu da tahmin_sonucu degiskenine atariz
         tahmin_sonucu = model.predict([[saat, gun, hava]])[0]
-        
-        # Veritabanına Kayıt
+       
+        # tahmin sonucunu veritabanina kaydediyoruz
         conn = sqlite3.connect('trafik.db')
         c = conn.cursor()
         c.execute("INSERT INTO tahminler (saat, gun, hava, sonuc) VALUES (?, ?, ?, ?)", (saat, gun, hava, tahmin_sonucu))
         conn.commit()
         conn.close()
         
-        # MÜKERRER KAYIT HATASININ ÇÖZÜMÜ:
+        # yenileyince veritabanina ayni seyi tekrar kaydetme sorunu cozumu
         # Sonucu geçici hafızaya (session) atıp, kullanıcıyı ana sayfaya yönlendiriyoruz.
         session['sonuc'] = tahmin_sonucu
-        
         return redirect(url_for('index'))
 
 if __name__ == '__main__':
